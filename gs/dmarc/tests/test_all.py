@@ -13,10 +13,14 @@
 #
 ############################################################################
 from __future__ import absolute_import, unicode_literals
-from unittest import TestSuite, main as unittest_main
-from gs.dmarc.tests.lookup import TestLookup
+
+from unittest import TestSuite
+from unittest import main as unittest_main
+
+from gs.dmarc.tests.lookup import TestLookup, TestMultipleSingleRRLookup
 from gs.dmarc.tests.receiver import TestReceiverPolicy
-testCases = (TestLookup, TestReceiverPolicy)
+
+testCases = (TestLookup, TestMultipleSingleRRLookup, TestReceiverPolicy)
 
 
 def load_tests(loader, tests, pattern):
@@ -25,6 +29,7 @@ def load_tests(loader, tests, pattern):
         tests = loader.loadTestsFromTestCase(testClass)
         suite.addTests(tests)
     return suite
+
 
 if __name__ == '__main__':
     unittest_main()

@@ -12,10 +12,13 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ############################################################################
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, print_function, unicode_literals
+
 from unittest import TestCase
+
 import dns.resolver
 from mock import patch
+
 import gs.dmarc.lookup
 
 
@@ -116,7 +119,8 @@ class TestLookup(TestCase):
         '''Test that explicitly using the ``p``policy tag is fine.'''
         queryResp = self.create_response('reject')
         faux_query.return_value = queryResp
-        r  = gs.dmarc.lookup.lookup_receiver_policy('example.com', policyTag='p')
+        r = gs.dmarc.lookup.lookup_receiver_policy(
+            'example.com', policyTag='p')
 
         self.assertPolicy(gs.dmarc.lookup.ReceiverPolicy.reject, r)
 
@@ -125,7 +129,8 @@ class TestLookup(TestCase):
         '''Test that explicitly using the ``sp``policy tag is fine.'''
         queryResp = self.create_response('reject')
         faux_query.return_value = queryResp
-        r  = gs.dmarc.lookup.lookup_receiver_policy('example.com', policyTag='sp')
+        r = gs.dmarc.lookup.lookup_receiver_policy(
+            'example.com', policyTag='sp')
 
         self.assertPolicy(gs.dmarc.lookup.ReceiverPolicy.none, r)
 
@@ -134,7 +139,23 @@ class TestLookup(TestCase):
         '''Test that the value of the ``p`` tag is returned if the ``sp``policy is absent.'''
         q = self.create_response('reject')[0]
         # Remove the subdomain policy from the DNS return
-        faux_query.return_value = [q.replace('sp=none; ', ''), ]
-        r  = gs.dmarc.lookup.lookup_receiver_policy('example.com', policyTag='sp')
+        faux_query.return_value = [q.replace('sp=none;', ''), ]
+        r = gs.dmarc.lookup.lookup_receiver_policy(
+            'example.com', policyTag='sp')
 
         self.assertPolicy(gs.dmarc.lookup.ReceiverPolicy.reject, r)
+
+
+class TestMultipleSingleRRLookup(TestLookup):
+    '''Test the lookup of DMARC policies
+    Multiple Strings in a Single DNS record
+    '''
+
+    @staticmethod
+    def create_response(policy):
+        'Create a fake DMARC response, with the specified ``policy``'
+        r = '"v=DMARC1;" "p={0};" "sp=none;" "pct=100;" '\
+            '"rua=mailto:dmarc-example-rua@example.com, '\
+            'mailto:dmarc_e_rua@example.com;"'
+        retval = [r.format(policy)]
+        return retval

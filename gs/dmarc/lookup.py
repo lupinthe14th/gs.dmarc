@@ -12,17 +12,20 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ############################################################################
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import absolute_import, print_function, unicode_literals
+
 from enum import Enum
+
+from dns.resolver import NXDOMAIN, NoAnswer, NoNameservers
+from dns.resolver import query as dns_query
 from pkg_resources import resource_filename  # Part of setuptools
+from publicsuffix import PublicSuffixList
+
 try:
     # typing is needed by mypy, but is unused otherwise
     from typing import Dict, Text  # noqa: F401
 except ImportError:
     pass
-from dns.resolver import (query as dns_query, NXDOMAIN, NoAnswer,
-                          NoNameservers)
-from publicsuffix import PublicSuffixList
 
 
 class ReceiverPolicy(Enum):
@@ -49,7 +52,7 @@ class ReceiverPolicy(Enum):
 def answer_to_dict(answer):
     # type: (Text) -> Dict[unicode, unicode]
     '''Turn the DNS DMARC answer into a dict of tag:value pairs.'''
-    a = answer.strip('"').strip(' ')
+    a = answer.replace('"', '').strip(' ')
     rawTags = [t.split('=') for t in a.split(';') if t]
     retval = {t[0].strip(): t[1].strip() for t in rawTags}
     return retval
